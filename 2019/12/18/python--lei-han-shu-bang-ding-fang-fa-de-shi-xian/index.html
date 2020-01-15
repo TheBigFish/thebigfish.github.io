@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="python," />
 
 
 
@@ -83,17 +83,17 @@
 
 
 
-<meta name="description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick">
+<meta name="description" content="python 类函数绑定方法的实现实现一个函数描述器 This means that all functions are non-data descriptors which return bound methods when they are invoked from an object.  所有的函数都是一个无数据的描述器。类实例调用函数即触发描述器语法，该描述器在类实例被调用时，返回一个绑定">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hello World">
-<meta property="og:url" content="http://yoursite.com/2020/01/14/hello-world/index.html">
+<meta property="og:title" content="python 类函数绑定方法的实现">
+<meta property="og:url" content="http://yoursite.com/2019/12/18/python--lei-han-shu-bang-ding-fang-fa-de-shi-xian/index.html">
 <meta property="og:site_name" content="理想-咸鱼">
-<meta property="og:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick">
+<meta property="og:description" content="python 类函数绑定方法的实现实现一个函数描述器 This means that all functions are non-data descriptors which return bound methods when they are invoked from an object.  所有的函数都是一个无数据的描述器。类实例调用函数即触发描述器语法，该描述器在类实例被调用时，返回一个绑定">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2020-01-14T06:44:18.237Z">
-<meta property="article:modified_time" content="2020-01-14T06:44:18.237Z">
+<meta property="article:published_time" content="2019-12-18T07:43:27.000Z">
+<meta property="article:modified_time" content="2019-12-18T08:08:11.000Z">
 <meta property="article:author" content="bigfish">
-<meta property="article:tag" content="python c c++ go lua 足球">
+<meta property="article:tag" content="python">
 <meta name="twitter:card" content="summary">
 
 
@@ -124,13 +124,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2020/01/14/hello-world/"/>
+  <link rel="canonical" href="http://yoursite.com/2019/12/18/python--lei-han-shu-bang-ding-fang-fa-de-shi-xian/"/>
 
 
 
 
 
-  <title>Hello World | 理想-咸鱼</title>
+  <title>python 类函数绑定方法的实现 | 理想-咸鱼</title>
   
 
 
@@ -257,7 +257,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/01/14/hello-world/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/18/python--lei-han-shu-bang-ding-fang-fa-de-shi-xian/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="bigfish">
@@ -274,7 +274,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">Hello World</h1>
+          <h1 class="post-title" itemprop="name headline">python 类函数绑定方法的实现</h1>
         
 
         <div class="post-meta">
@@ -286,8 +286,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-01-14T14:44:18+08:00">
-                2020-01-14
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-12-18T15:43:27+08:00">
+                2019-12-18
               </time>
             
 
@@ -323,7 +323,7 @@
                   <span class="post-meta-item-text">Words count in article&#58;</span>
                 
                 <span title="Words count in article">
-                  73
+                  612
                 </span>
               
 
@@ -339,7 +339,7 @@
                   <span class="post-meta-item-text">Reading time &asymp;</span>
                 
                 <span title="Reading time">
-                  1
+                  3
                 </span>
               
             </div>
@@ -360,19 +360,67 @@
       
 
       
-        <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
+        <h1 id="python-类函数绑定方法的实现"><a href="#python-类函数绑定方法的实现" class="headerlink" title="python 类函数绑定方法的实现"></a>python 类函数绑定方法的实现</h1><h2 id="实现一个函数描述器"><a href="#实现一个函数描述器" class="headerlink" title="实现一个函数描述器"></a>实现一个函数描述器</h2><blockquote>
+<p>This means that all functions are non-data descriptors which return bound methods when they are invoked from an object.</p>
+</blockquote>
+<p>所有的函数都是一个无数据的描述器。类实例调用函数即触发描述器语法，该描述器在类实例被调用时，返回一个绑定的普通方法。</p>
+<p>下面实现了一个纯 python 的描述器 BindFunction, 用来绑定方法 f_normal 到函数 f。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">D</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">f</span><span class="params">(self, name)</span>:</span></span><br><span class="line">        print(self, name)</span><br><span class="line">d=D()</span><br><span class="line">d.f(<span class="string">"hello"</span>)</span><br><span class="line">D.f(d, <span class="string">"hello"</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> types</span><br><span class="line"><span class="keyword">from</span> functools <span class="keyword">import</span> wraps</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">f_normal</span><span class="params">(self, name)</span>:</span></span><br><span class="line">    print(self, name)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">BindFunction</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, func)</span>:</span></span><br><span class="line">        wraps(func)(self)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__call__</span><span class="params">(self, *args, **kwargs)</span>:</span></span><br><span class="line">        <span class="keyword">return</span> self.__wrapped__(*args, **kwargs)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__get__</span><span class="params">(self, obj, objtype=None)</span>:</span></span><br><span class="line">        <span class="string">"Simulate func_descr_get() in Objects/funcobject.c"</span></span><br><span class="line">        <span class="keyword">if</span> obj <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">            <span class="keyword">return</span> self</span><br><span class="line">        <span class="keyword">return</span> types.MethodType(self,  obj)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">D</span>:</span></span><br><span class="line">    f = BindFunction(f_normal)</span><br><span class="line"></span><br><span class="line">d = D()</span><br><span class="line">d.f(<span class="string">"world"</span>)</span><br><span class="line">D.f(d, <span class="string">"world"</span>)</span><br></pre></td></tr></table></figure>
 
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+<p>类 BindFunction 也可以实现如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">BindFunction</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, func)</span>:</span></span><br><span class="line">        self.func = func</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__get__</span><span class="params">(self, obj, objtype=None)</span>:</span></span><br><span class="line">        <span class="string">"Simulate func_descr_get() in Objects/funcobject.c"</span></span><br><span class="line">        <span class="keyword">if</span> obj <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">            <span class="keyword">return</span> self.func</span><br><span class="line">        <span class="keyword">return</span> types.MethodType(self.func,  obj)</span><br></pre></td></tr></table></figure>
 
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+<h2 id="Functions-and-Methods"><a href="#Functions-and-Methods" class="headerlink" title="Functions and Methods"></a>Functions and Methods</h2><p><a href="https://docs.python.org/3/howto/descriptor.html?highlight=types%20methodtype#functions-and-methods" target="_blank" rel="noopener">Functions and Methods</a></p>
+<blockquote>
+<pre><code>Python’s object oriented features are built upon a function based environment. Using non-data descriptors, the two are merged seamlessly.</code></pre></blockquote>
+<pre><code>Class dictionaries store methods as functions. In a class definition, methods are written using def or lambda, the usual tools for creating functions. Methods only differ from regular functions in that the first argument is reserved for the object instance. By Python convention, the instance reference is called self but may be called this or any other variable name.
 
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+To support method calls, functions include the __get__() method for binding methods during attribute access. This means that all functions are non-data descriptors which return bound methods when they are invoked from an object. In pure Python, it works like this:
 
-<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html" target="_blank" rel="noopener">Deployment</a></p>
+class Function(object):
+    . . .
+    def __get__(self, obj, objtype=None):
+        &quot;Simulate func_descr_get() in Objects/funcobject.c&quot;
+        if obj is None:
+            return self
+        return types.MethodType(self, obj)
+Running the interpreter shows how the function descriptor works in practice:
+
+&gt;&gt;&gt;
+&gt;&gt;&gt; class D(object):
+...     def f(self, x):
+...         return x
+...
+&gt;&gt;&gt; d = D()
+
+# Access through the class dictionary does not invoke __get__.
+# It just returns the underlying function object.
+&gt;&gt;&gt; D.__dict__[&apos;f&apos;]
+&lt;function D.f at 0x00C45070&gt;
+
+# Dotted access from a class calls __get__() which just returns
+# the underlying function unchanged.
+&gt;&gt;&gt; D.f
+&lt;function D.f at 0x00C45070&gt;
+
+# The function has a __qualname__ attribute to support introspection
+&gt;&gt;&gt; D.f.__qualname__
+&apos;D.f&apos;
+
+# Dotted access from an instance calls __get__() which returns the
+# function wrapped in a bound method object
+&gt;&gt;&gt; d.f
+&lt;bound method D.f of &lt;__main__.D object at 0x00B18C90&gt;&gt;
+
+# Internally, the bound method stores the underlying function,
+# the bound instance, and the class of the bound instance.
+&gt;&gt;&gt; d.f.__func__
+&lt;function D.f at 0x1012e5ae8&gt;
+&gt;&gt;&gt; d.f.__self__
+&lt;__main__.D object at 0x1012e1f98&gt;
+&gt;&gt;&gt; d.f.__class__
+&lt;class &apos;method&apos;&gt;</code></pre><hr>
+<p>Sync From: <a href="https://github.com/TheBigFish/blog/issues/14" target="_blank" rel="noopener">https://github.com/TheBigFish/blog/issues/14</a></p>
 
       
     </div>
@@ -388,6 +436,12 @@
 
     <footer class="post-footer">
       
+        <div class="post-tags">
+          
+            <a href="/tags/python/" rel="tag"># python</a>
+          
+        </div>
+      
 
       
       
@@ -397,8 +451,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2020/01/08/uefi-security-boot--shi-xian-xi-jie/" rel="next" title="uefi security boot 实现细节">
-                <i class="fa fa-chevron-left"></i> uefi security boot 实现细节
+              <a href="/2019/07/17/codeblock--lian-jie--openssl--ku-wen-jian/" rel="next" title="codeblock 链接 openssl 库文件">
+                <i class="fa fa-chevron-left"></i> codeblock 链接 openssl 库文件
               </a>
             
           </div>
@@ -407,8 +461,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2020/01/15/hello-hexo/" rel="prev" title="hello,hexo">
-                hello,hexo <i class="fa fa-chevron-right"></i>
+              <a href="/2020/01/08/uefi-security-boot--shi-xian-xi-jie/" rel="prev" title="uefi security boot 实现细节">
+                uefi security boot 实现细节 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -541,7 +595,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Quick-Start"><span class="nav-number">1.</span> <span class="nav-text">Quick Start</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Create-a-new-post"><span class="nav-number">1.1.</span> <span class="nav-text">Create a new post</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Run-server"><span class="nav-number">1.2.</span> <span class="nav-text">Run server</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Generate-static-files"><span class="nav-number">1.3.</span> <span class="nav-text">Generate static files</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Deploy-to-remote-sites"><span class="nav-number">1.4.</span> <span class="nav-text">Deploy to remote sites</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#python-类函数绑定方法的实现"><span class="nav-number">1.</span> <span class="nav-text">python 类函数绑定方法的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#实现一个函数描述器"><span class="nav-number">1.1.</span> <span class="nav-text">实现一个函数描述器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Functions-and-Methods"><span class="nav-number">1.2.</span> <span class="nav-text">Functions and Methods</span></a></li></ol></li></ol></div>
             
 
           </div>

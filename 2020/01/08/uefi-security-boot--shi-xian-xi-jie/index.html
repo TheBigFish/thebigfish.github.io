@@ -83,18 +83,21 @@
 
 
 
-<meta name="description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick">
+<meta name="description" content="uefi security boot 实现细节密钥体系 PKpub Platform Key   确定平台所有者和平台固件之间的信任关系 BIOS 厂商 &#x2F; OEM 创建这个 KEY PK 是自签名 PKpriv 的所有者必须保证私钥的安全   KEKpub Key Exchange Key    确定平台固件和操作系统之间的信任关系 KEY 用来对 db&#x2F;dbx 进行签名 操作系统厂商提供 OE">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hello World">
-<meta property="og:url" content="http://yoursite.com/2020/01/14/hello-world/index.html">
+<meta property="og:title" content="uefi security boot 实现细节">
+<meta property="og:url" content="http://yoursite.com/2020/01/08/uefi-security-boot--shi-xian-xi-jie/index.html">
 <meta property="og:site_name" content="理想-咸鱼">
-<meta property="og:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick">
+<meta property="og:description" content="uefi security boot 实现细节密钥体系 PKpub Platform Key   确定平台所有者和平台固件之间的信任关系 BIOS 厂商 &#x2F; OEM 创建这个 KEY PK 是自签名 PKpriv 的所有者必须保证私钥的安全   KEKpub Key Exchange Key    确定平台固件和操作系统之间的信任关系 KEY 用来对 db&#x2F;dbx 进行签名 操作系统厂商提供 OE">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2020-01-14T06:44:18.237Z">
-<meta property="article:modified_time" content="2020-01-14T06:44:18.237Z">
+<meta property="og:image" content="https://github.com/TheBigFish/blog/raw/master/assets/security_boot_01.png">
+<meta property="og:image" content="https://github.com/TheBigFish/blog/raw/master/assets/security_boot_02.png">
+<meta property="article:published_time" content="2020-01-08T03:10:46.000Z">
+<meta property="article:modified_time" content="2020-01-08T03:10:46.000Z">
 <meta property="article:author" content="bigfish">
 <meta property="article:tag" content="python c c++ go lua 足球">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://github.com/TheBigFish/blog/raw/master/assets/security_boot_01.png">
 
 
 
@@ -124,13 +127,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2020/01/14/hello-world/"/>
+  <link rel="canonical" href="http://yoursite.com/2020/01/08/uefi-security-boot--shi-xian-xi-jie/"/>
 
 
 
 
 
-  <title>Hello World | 理想-咸鱼</title>
+  <title>uefi security boot 实现细节 | 理想-咸鱼</title>
   
 
 
@@ -257,7 +260,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/01/14/hello-world/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/01/08/uefi-security-boot--shi-xian-xi-jie/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="bigfish">
@@ -274,7 +277,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">Hello World</h1>
+          <h1 class="post-title" itemprop="name headline">uefi security boot 实现细节</h1>
         
 
         <div class="post-meta">
@@ -286,8 +289,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-01-14T14:44:18+08:00">
-                2020-01-14
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-01-08T11:10:46+08:00">
+                2020-01-08
               </time>
             
 
@@ -323,7 +326,7 @@
                   <span class="post-meta-item-text">Words count in article&#58;</span>
                 
                 <span title="Words count in article">
-                  73
+                  950
                 </span>
               
 
@@ -339,7 +342,7 @@
                   <span class="post-meta-item-text">Reading time &asymp;</span>
                 
                 <span title="Reading time">
-                  1
+                  3
                 </span>
               
             </div>
@@ -360,19 +363,87 @@
       
 
       
-        <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html" target="_blank" rel="noopener">Deployment</a></p>
+        <h1 id="uefi-security-boot-实现细节"><a href="#uefi-security-boot-实现细节" class="headerlink" title="uefi security boot 实现细节"></a>uefi security boot 实现细节</h1><h2 id="密钥体系"><a href="#密钥体系" class="headerlink" title="密钥体系"></a>密钥体系</h2><p><img src="https://github.com/TheBigFish/blog/raw/master/assets/security_boot_01.png" alt=""></p>
+<h3 id="PKpub"><a href="#PKpub" class="headerlink" title="PKpub"></a>PKpub</h3><blockquote>
+<p>Platform Key</p>
+</blockquote>
+<ul>
+<li>确定平台所有者和平台固件之间的信任关系</li>
+<li>BIOS 厂商 / OEM 创建这个 KEY</li>
+<li>PK 是自签名</li>
+<li>PKpriv 的所有者必须保证私钥的安全 </li>
+</ul>
+<h3 id="KEKpub"><a href="#KEKpub" class="headerlink" title="KEKpub"></a>KEKpub</h3><blockquote>
+<p>Key Exchange Key </p>
+</blockquote>
+<ul>
+<li>确定平台固件和操作系统之间的信任关系</li>
+<li>KEY 用来对 db/dbx 进行签名</li>
+<li>操作系统厂商提供</li>
+<li>OEM 也可提供自己的 KEY 对 shell app 进行签名</li>
+</ul>
+<h3 id="DB"><a href="#DB" class="headerlink" title="DB"></a>DB</h3><blockquote>
+<p>合规数据库</p>
+</blockquote>
+<ul>
+<li>用来存放运行被执行的代码的签名，或者存储证书</li>
+<li>OEM 可以把 IHV(独立硬件厂商）的签名放在 DB 里面，用来对第三方 OpROMs（UEFI CA) 进行校验</li>
+<li>MS CA / UEFI CA 由 MSFT 提供.</li>
+</ul>
+<h3 id="DBX"><a href="#DBX" class="headerlink" title="DBX"></a>DBX</h3><blockquote>
+<p>禁止数据库</p>
+</blockquote>
+<ul>
+<li>用来存储禁止执行代码的签名</li>
+<li>或者被禁止的公司的证书</li>
+</ul>
+<h3 id="KEY-的生成过程"><a href="#KEY-的生成过程" class="headerlink" title="KEY 的生成过程"></a>KEY 的生成过程</h3><p><img src="https://github.com/TheBigFish/blog/raw/master/assets/security_boot_02.png" alt=""></p>
+<p>db 及 dbx 存放的是记录以及由某个 KEK 对该记录进行签名的数据，记录可以是：<br>1. efi 文件的 hash 值<br>2. efi 文件的签名数据<br>3. 对 efi 文件进行签名的证书</p>
+<p>PK 由平台所有者持有，比如联想<br>KEK 由 PK 签名</p>
+<p>db/dbx 数据进行更新时，bios 需要进行授权验证，验证该更新数据是否是由某个 KEK 进行签名，若验证通过，则将该条记录及其对应的签名数据存入 db/dbx。</p>
+<p>MSCApri 以及 UEFICApri 可以对厂商提供的驱动进行签名。</p>
+<h4 id="驱动更新流程"><a href="#驱动更新流程" class="headerlink" title="驱动更新流程"></a>驱动更新流程</h4><p>比如某个显卡厂商 Card</p>
+<ul>
+<li><p>使用自己的私钥 (Cardpri) 对自己的驱动进行签名生成 CardSign，(其证书为 CardCert)。</p>
+</li>
+<li><p>找 UEFICApri 对自己的数据（CardSign、CardCert）进行签名，生成 (（CardSign，UEFICApri_CardSign_Sign ）（CardCert，UEFICApri_CardCert_Sign ）） 。</p>
+</li>
+<li><p>调用 bios 接口进行更新，更新数据为 (（CardSign，UEFICApri_CardSign_Sign ）（CardCert，UEFICApri_CardCert_Sign ））</p>
+</li>
+<li><p>bios 中有 UEFICApub 对应的 KEY (UEFIKEKpub)</p>
+</li>
+<li><p>bios 遍历 KEK，使用 KEK 对 (（CardSign，UEFICApri_CardSign_Sign ）（CardCert，UEFICApri_CardCert_Sign ））进行验签</p>
+</li>
+<li><p>验签通过，将条目 （CardSign，UEFICApri_CardSign_Sign）、（CardCert，UEFICApri_CardCert_Sign）存入 db</p>
+</li>
+</ul>
+<h4 id="efi-文件无签名数据的情况"><a href="#efi-文件无签名数据的情况" class="headerlink" title="efi 文件无签名数据的情况"></a>efi 文件无签名数据的情况</h4><p>按照上述校验流程，显卡厂商也可以不使用自己的私钥对驱动签名，而只是生成一个哈希值。<br>再使用 UEFICApri 对哈希值进行签名生成  (CardHash, UEFICApri_CardHash_Sign)。</p>
+<p>要将该哈希及对应签名信息更新到 db 时，仍然要使用 KEK 验证 UEFICApri_CardHash_Sign。</p>
+<p>使用 hash 值的 efi 文件在启动时，只需要验证该 efi 文件的 hash 是否匹配 db/dbx 中的某个 hash。</p>
+<h4 id="驱动校验流程"><a href="#驱动校验流程" class="headerlink" title="驱动校验流程"></a>驱动校验流程</h4><ul>
+<li>bios 验证显卡驱动</li>
+<li>显卡驱动中由对应的签名的证书（CardCert）信息。</li>
+<li>遍历 db 找到 CardCert</li>
+<li>使用 CardCert 对 db 中所有类型为签名值的条目进行验证</li>
+<li>如果某条验证通过，则校验通过</li>
+</ul>
+<h4 id="dbx"><a href="#dbx" class="headerlink" title="dbx"></a>dbx</h4><p>dbx 内容与 db 中数据格式一致，匹配 dbx 中数据则认为验证失败</p>
+<h4 id="MSCApri-与-UEFICApri"><a href="#MSCApri-与-UEFICApri" class="headerlink" title="MSCApri 与 UEFICApri"></a>MSCApri 与 UEFICApri</h4><p>市面上已经有大量使用 MSCApri 以及 UEFICApri 签名的 efi。</p>
+<p>要加入该体系，只需要，使用 PKpri 对 MSCApub 及 UEFICApub 进行签名，生成对应的两个 KEK:  MSKEKpub  UEFIKEKpub。</p>
+<p>将该两个 KEK 加入 bios , 即可以支持已签名的 efi。</p>
+<h4 id="OS-Loader"><a href="#OS-Loader" class="headerlink" title="OS Loader"></a>OS Loader</h4><blockquote>
+<p>比如 grub</p>
+</blockquote>
+<p>OS Loader 使用 MSCApri 签名，对应的 MSCApub 存储于 db，同时 MSKEKpub 也内置于 bios。</p>
+<h3 id="db-dbx-防篡改"><a href="#db-dbx-防篡改" class="headerlink" title="db/dbx 防篡改"></a>db/dbx 防篡改</h3><p>db/dbx 每条记录都是 数据以及使用 KEK 对该数据的签名。<br>bios 启动时，逐条遍历记录并验证签名。</p>
+<h2 id="概括"><a href="#概括" class="headerlink" title="概括"></a>概括</h2><p>通过使用分级密钥体系</p>
+<ul>
+<li>平台所有者只持有 PKpri</li>
+<li>各级板卡厂商及操作系统厂商可以使用各自的公私钥体系对数据进行签名</li>
+<li>平台所有者通过签名各级厂商的公钥生成 KEK, 将平台所有者认为可信的厂商加入信任</li>
+</ul>
+<hr>
+<p>Sync From: <a href="https://github.com/TheBigFish/blog/issues/15" target="_blank" rel="noopener">https://github.com/TheBigFish/blog/issues/15</a></p>
 
       
     </div>
@@ -397,8 +468,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2020/01/08/uefi-security-boot--shi-xian-xi-jie/" rel="next" title="uefi security boot 实现细节">
-                <i class="fa fa-chevron-left"></i> uefi security boot 实现细节
+              <a href="/2019/12/18/python--lei-han-shu-bang-ding-fang-fa-de-shi-xian/" rel="next" title="python 类函数绑定方法的实现">
+                <i class="fa fa-chevron-left"></i> python 类函数绑定方法的实现
               </a>
             
           </div>
@@ -407,8 +478,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2020/01/15/hello-hexo/" rel="prev" title="hello,hexo">
-                hello,hexo <i class="fa fa-chevron-right"></i>
+              <a href="/2020/01/14/hello-world/" rel="prev" title="Hello World">
+                Hello World <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -541,7 +612,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Quick-Start"><span class="nav-number">1.</span> <span class="nav-text">Quick Start</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Create-a-new-post"><span class="nav-number">1.1.</span> <span class="nav-text">Create a new post</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Run-server"><span class="nav-number">1.2.</span> <span class="nav-text">Run server</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Generate-static-files"><span class="nav-number">1.3.</span> <span class="nav-text">Generate static files</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Deploy-to-remote-sites"><span class="nav-number">1.4.</span> <span class="nav-text">Deploy to remote sites</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#uefi-security-boot-实现细节"><span class="nav-number">1.</span> <span class="nav-text">uefi security boot 实现细节</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#密钥体系"><span class="nav-number">1.1.</span> <span class="nav-text">密钥体系</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#PKpub"><span class="nav-number">1.1.1.</span> <span class="nav-text">PKpub</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#KEKpub"><span class="nav-number">1.1.2.</span> <span class="nav-text">KEKpub</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DB"><span class="nav-number">1.1.3.</span> <span class="nav-text">DB</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DBX"><span class="nav-number">1.1.4.</span> <span class="nav-text">DBX</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#KEY-的生成过程"><span class="nav-number">1.1.5.</span> <span class="nav-text">KEY 的生成过程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#驱动更新流程"><span class="nav-number">1.1.5.1.</span> <span class="nav-text">驱动更新流程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#efi-文件无签名数据的情况"><span class="nav-number">1.1.5.2.</span> <span class="nav-text">efi 文件无签名数据的情况</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#驱动校验流程"><span class="nav-number">1.1.5.3.</span> <span class="nav-text">驱动校验流程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#dbx"><span class="nav-number">1.1.5.4.</span> <span class="nav-text">dbx</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#MSCApri-与-UEFICApri"><span class="nav-number">1.1.5.5.</span> <span class="nav-text">MSCApri 与 UEFICApri</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#OS-Loader"><span class="nav-number">1.1.5.6.</span> <span class="nav-text">OS Loader</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#db-dbx-防篡改"><span class="nav-number">1.1.6.</span> <span class="nav-text">db&#x2F;dbx 防篡改</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#概括"><span class="nav-number">1.2.</span> <span class="nav-text">概括</span></a></li></ol></li></ol></div>
             
 
           </div>

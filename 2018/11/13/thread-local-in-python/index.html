@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="python," />
+
+
+
+
+  
+
+
+  <link rel="alternate" href="/atom.xml" title="理想-咸鱼" type="application/atom+xml" />
+
+
+
+
+
+
+<meta name="description" content="thread local in python 线程局部变量 主线程也有自己的线程局部变量 继承 threading.local 应用实例      thread local in python参考 Thread Locals in Python: Mostly easy 线程局部变量123456789101112import threadingmydata &#x3D; threading.local">
+<meta property="og:type" content="article">
+<meta property="og:title" content="thread local in python">
+<meta property="og:url" content="http://yoursite.com/2018/11/13/thread-local-in-python/index.html">
+<meta property="og:site_name" content="理想-咸鱼">
+<meta property="og:description" content="thread local in python 线程局部变量 主线程也有自己的线程局部变量 继承 threading.local 应用实例      thread local in python参考 Thread Locals in Python: Mostly easy 线程局部变量123456789101112import threadingmydata &#x3D; threading.local">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2018-11-13T03:50:25.000Z">
+<meta property="article:modified_time" content="2018-11-13T03:50:25.000Z">
+<meta property="article:author" content="bigfish">
+<meta property="article:tag" content="python">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.3',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/11/13/thread-local-in-python/"/>
+
+
+
+
+
+  <title>thread local in python | 理想-咸鱼</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">理想-咸鱼</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">鱼翔浅底</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/11/13/thread-local-in-python/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="bigfish">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="理想-咸鱼">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">thread local in python</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-13T11:50:25+08:00">
+                2018-11-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>  阅读数
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Words count in article&#58;</span>
+                
+                <span title="Words count in article">
+                  457
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Reading time &asymp;</span>
+                
+                <span title="Reading time">
+                  2
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <!-- TOC -->
+
+<ul>
+<li><a href="#thread-local-in-python">thread local in python</a><ul>
+<li><a href="#%E7%BA%BF%E7%A8%8B%E5%B1%80%E9%83%A8%E5%8F%98%E9%87%8F">线程局部变量</a></li>
+<li><a href="#%E4%B8%BB%E7%BA%BF%E7%A8%8B%E4%B9%9F%E6%9C%89%E8%87%AA%E5%B7%B1%E7%9A%84%E7%BA%BF%E7%A8%8B%E5%B1%80%E9%83%A8%E5%8F%98%E9%87%8F">主线程也有自己的线程局部变量</a></li>
+<li><a href="#%E7%BB%A7%E6%89%BF-threadinglocal">继承 threading.local</a></li>
+<li><a href="#%E5%BA%94%E7%94%A8%E5%AE%9E%E4%BE%8B">应用实例</a></li>
+</ul>
+</li>
+</ul>
+<!-- /TOC -->
+
+<h1 id="thread-local-in-python"><a href="#thread-local-in-python" class="headerlink" title="thread local in python"></a>thread local in python</h1><p>参考 <a href="http://slinkp.com/python-thread-locals-20171201.html" target="_blank" rel="noopener">Thread Locals in Python: Mostly easy</a></p>
+<h2 id="线程局部变量"><a href="#线程局部变量" class="headerlink" title="线程局部变量"></a>线程局部变量</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> threading</span><br><span class="line"></span><br><span class="line">mydata = threading.local()</span><br><span class="line">mydata.x = <span class="string">'hello'</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Worker</span><span class="params">(threading.Thread)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">run</span><span class="params">(self)</span>:</span></span><br><span class="line">        mydata.x = self.name</span><br><span class="line">        <span class="keyword">print</span> mydata.x</span><br><span class="line"></span><br><span class="line">w1, w2 = Worker(), Worker()</span><br><span class="line">w1.start(); w2.start(); w1.join(); w1.join()</span><br></pre></td></tr></table></figure>
+
+<pre><code>Thread-1
+Thread-2</code></pre><p>各线程独享自己的变量，但是使用全局变量 mydata</p>
+<h2 id="主线程也有自己的线程局部变量"><a href="#主线程也有自己的线程局部变量" class="headerlink" title="主线程也有自己的线程局部变量"></a>主线程也有自己的线程局部变量</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> threading</span><br><span class="line"></span><br><span class="line">mydata = threading.local()</span><br><span class="line">mydata.x = &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Worker</span><span class="params">(threading.Thread)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">run</span><span class="params">(self)</span>:</span></span><br><span class="line">        mydata.x[<span class="string">'message'</span>] = self.name</span><br><span class="line">        <span class="keyword">print</span> mydata.x[<span class="string">'message'</span>]</span><br><span class="line">w1, w2 = Worker(), Worker()</span><br><span class="line">w1.start(); w2.start(); w1.join(); w2.join()</span><br></pre></td></tr></table></figure>
+
+<pre><code>Exception in thread Thread-1:
+Traceback (most recent call last):
+  File &quot;C:\Python27\lib\threading.py&quot;, line 801, in __bootstrap_inner
+    self.run()
+  File &quot;E:/learn/python/test/thread_local.py&quot;, line 15, in run
+    mydata.x[&apos;message&apos;] = self.name
+AttributeError: &apos;thread._local&apos; object has no attribute &apos;x&apos;
+
+Exception in thread Thread-2:
+Traceback (most recent call last):
+  File &quot;C:\Python27\lib\threading.py&quot;, line 801, in __bootstrap_inner
+    self.run()
+  File &quot;E:/learn/python/test/thread_local.py&quot;, line 15, in run
+    mydata.x[&apos;message&apos;] = self.name
+AttributeError: &apos;thread._local&apos; object has no attribute &apos;x&apos;</code></pre><p>线程 w1,w2 没有 x 属性，子线程与主线程拥有各自的变量</p>
+<h2 id="继承-threading-local"><a href="#继承-threading-local" class="headerlink" title="继承 threading.local"></a>继承 threading.local</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> threading</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyData</span><span class="params">(threading.local)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.x = &#123;&#125;</span><br><span class="line"></span><br><span class="line">mydata = MyData()</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Worker</span><span class="params">(threading.Thread)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">run</span><span class="params">(self)</span>:</span></span><br><span class="line">        mydata.x[<span class="string">'message'</span>] = self.name</span><br><span class="line">        <span class="keyword">print</span> mydata.x[<span class="string">'message'</span>]</span><br><span class="line"></span><br><span class="line">w1, w2 = Worker(), Worker()</span><br><span class="line">w1.start(); w2.start(); w1.join(); w2.join()</span><br></pre></td></tr></table></figure>
+
+<pre><code>Thread-1
+Thread-2</code></pre><h2 id="应用实例"><a href="#应用实例" class="headerlink" title="应用实例"></a>应用实例</h2><p>bottle 0.4.10</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Request</span><span class="params">(threading.local)</span>:</span></span><br><span class="line">    <span class="string">""" Represents a single request using thread-local namespace. """</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">bind</span><span class="params">(self, environ)</span>:</span></span><br><span class="line">        <span class="string">""" Binds the enviroment of the current request to this request handler """</span></span><br><span class="line">        self._environ = environ</span><br><span class="line">        self._GET = <span class="literal">None</span></span><br><span class="line">        self._POST = <span class="literal">None</span></span><br><span class="line">        self._GETPOST = <span class="literal">None</span></span><br><span class="line">        self._COOKIES = <span class="literal">None</span></span><br><span class="line">        self.path = self._environ.get(<span class="string">'PATH_INFO'</span>, <span class="string">'/'</span>).strip()</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> self.path.startswith(<span class="string">'/'</span>):</span><br><span class="line">            self.path = <span class="string">'/'</span> + self.path</span><br><span class="line"></span><br><span class="line"><span class="comment">#----------------------</span></span><br><span class="line">request = Request()</span><br><span class="line"><span class="comment">#----------------------</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">WSGIHandler</span><span class="params">(environ, start_response)</span>:</span></span><br><span class="line">    <span class="string">"""The bottle WSGI-handler."""</span></span><br><span class="line">    <span class="keyword">global</span> request</span><br><span class="line">    <span class="keyword">global</span> response</span><br><span class="line">    request.bind(environ)</span><br><span class="line">    response.bind()</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        handler, args = match_url(request.path, request.method)</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> handler:</span><br><span class="line">            <span class="keyword">raise</span> HTTPError(<span class="number">404</span>, <span class="string">"Not found"</span>)</span><br><span class="line">        output = handler(**args)</span><br><span class="line">    <span class="keyword">except</span> BreakTheBottle, shard:</span><br><span class="line">        output = shard.output</span><br></pre></td></tr></table></figure>
+
+
+<hr>
+<p>Sync From: <a href="https://github.com/TheBigFish/blog/issues/4" target="_blank" rel="noopener">https://github.com/TheBigFish/blog/issues/4</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/python/" rel="tag"># python</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/11/07/frp--pei-zhi--http%E3%80%81websocket%E3%80%81ssh--zhuan-fa/" rel="next" title="frp 配置 http、websocket、ssh 转发">
+                <i class="fa fa-chevron-left"></i> frp 配置 http、websocket、ssh 转发
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/11/15/python--duo-xian-cheng-bian-cheng/" rel="prev" title="python 多线程编程">
+                python 多线程编程 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  
+    <div id="gitalk-container"></div>
+  
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">bigfish</p>
+              <p class="site-description motion-element" itemprop="description">一些简单的想法</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7C%20archive">
+              
+                  <span class="site-state-item-count">17</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#thread-local-in-python"><span class="nav-number">1.</span> <span class="nav-text">thread local in python</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#线程局部变量"><span class="nav-number">1.1.</span> <span class="nav-text">线程局部变量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#主线程也有自己的线程局部变量"><span class="nav-number">1.2.</span> <span class="nav-text">主线程也有自己的线程局部变量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#继承-threading-local"><span class="nav-number">1.3.</span> <span class="nav-text">继承 threading.local</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#应用实例"><span class="nav-number">1.4.</span> <span class="nav-text">应用实例</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">bigfish</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.3</div>
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      访客数
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      人
+    </span>
+  
+
+  
+    <span class="site-pv">
+      总访问量
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      次
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.3"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+  <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+  <div id="gitalk-container"></div>
+  <script type="text/javascript">
+    var gitalk = new Gitalk({
+      clientID: '539ee569f1e8cf3ea34a',
+      clientSecret: 'd4384d3c96e794fea423f52d48aec0caab7d0eea',
+      repo: 'blog_comment',
+      owner: 'TheBigFish',
+      admin: ['TheBigFish'],
+      id: location.pathname,
+      distractionFreeMode: 'false'
+    })
+    gitalk.render('gitalk-container')
+  </script>
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

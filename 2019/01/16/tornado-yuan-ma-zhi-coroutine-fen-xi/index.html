@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Tornado," />
+
+
+
+
+  
+
+
+  <link rel="alternate" href="/atom.xml" title="理想-咸鱼" type="application/atom+xml" />
+
+
+
+
+
+
+<meta name="description" content="tornado 源码之 coroutine 分析 tornado 的协程原理分析版本：4.3.0  为支持异步，tornado 实现了一个协程库。 tornado 实现的协程框架有下面几个特点：  支持 python 2.7，没有使用 yield from特性，纯粹使用 yield 实现 使用抛出异常的方式从协程返回值 采用 Future 类代理协程（保存协程的执行结果，当携程执行结束时，调用注册">
+<meta property="og:type" content="article">
+<meta property="og:title" content="tornado源码之coroutine分析">
+<meta property="og:url" content="http://yoursite.com/2019/01/16/tornado-yuan-ma-zhi-coroutine-fen-xi/index.html">
+<meta property="og:site_name" content="理想-咸鱼">
+<meta property="og:description" content="tornado 源码之 coroutine 分析 tornado 的协程原理分析版本：4.3.0  为支持异步，tornado 实现了一个协程库。 tornado 实现的协程框架有下面几个特点：  支持 python 2.7，没有使用 yield from特性，纯粹使用 yield 实现 使用抛出异常的方式从协程返回值 采用 Future 类代理协程（保存协程的执行结果，当携程执行结束时，调用注册">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://github.com/TheBigFish/blog/raw/master/assets/tornado_simple_routine_1.png">
+<meta property="article:published_time" content="2019-01-16T06:16:02.000Z">
+<meta property="article:modified_time" content="2019-01-17T06:50:51.000Z">
+<meta property="article:author" content="bigfish">
+<meta property="article:tag" content="Tornado">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://github.com/TheBigFish/blog/raw/master/assets/tornado_simple_routine_1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.3',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/01/16/tornado-yuan-ma-zhi-coroutine-fen-xi/"/>
+
+
+
+
+
+  <title>tornado源码之coroutine分析 | 理想-咸鱼</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">理想-咸鱼</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">鱼翔浅底</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/16/tornado-yuan-ma-zhi-coroutine-fen-xi/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="bigfish">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="理想-咸鱼">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">tornado源码之coroutine分析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-01-16T14:16:02+08:00">
+                2019-01-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>  阅读数
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Words count in article&#58;</span>
+                
+                <span title="Words count in article">
+                  2.4k
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Reading time &asymp;</span>
+                
+                <span title="Reading time">
+                  10
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="tornado-源码之-coroutine-分析"><a href="#tornado-源码之-coroutine-分析" class="headerlink" title="tornado 源码之 coroutine 分析"></a>tornado 源码之 coroutine 分析</h1><blockquote>
+<p>tornado 的协程原理分析<br>版本：4.3.0</p>
+</blockquote>
+<p>为支持异步，tornado 实现了一个协程库。</p>
+<p>tornado 实现的协程框架有下面几个特点：</p>
+<ol>
+<li>支持 python 2.7，没有使用 yield from<br>特性，纯粹使用 yield 实现</li>
+<li>使用抛出异常的方式从协程返回值</li>
+<li>采用 Future 类代理协程（保存协程的执行结果，当携程执行结束时，调用注册的回调函数）</li>
+<li>使用 IOLoop 事件循环，当事件发生时在循环中调用注册的回调，驱动协程向前执行</li>
+</ol>
+<p>由此可见，这是 python 协程的一个经典的实现。</p>
+<p>本文将实现一个类似 tornado 实现的基础协程框架，并阐述相应的原理。</p>
+<h2 id="外部库"><a href="#外部库" class="headerlink" title="外部库"></a>外部库</h2><p>使用 time 来实现定时器回调的时间计算。<br>bisect 的 insort 方法维护一个时间有限的定时器队列。<br>functools 的 partial 方法绑定函数部分参数。<br>使用 backports_abc 导入 Generator 来判断函数是否是生成器。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">import</span> bisect</span><br><span class="line"><span class="keyword">import</span> functools</span><br><span class="line"><span class="keyword">from</span> backports_abc <span class="keyword">import</span> Generator <span class="keyword">as</span> GeneratorType</span><br></pre></td></tr></table></figure>
+
+<h2 id="Future"><a href="#Future" class="headerlink" title="Future"></a>Future</h2><blockquote>
+<p>是一个穿梭于协程和调度器之间的信使。<br>提供了回调函数注册 (当异步事件完成后，调用注册的回调)、中间结果保存、结束结果返回等功能</p>
+</blockquote>
+<p>add_done_callback 注册回调函数，当 Future 被解决时，改回调函数被调用。<br>set_result 设置最终的状态，并且调用已注册的回调函数</p>
+<p>协程中的每一个 yield 对应一个协程，相应的对应一个 Future 对象，譬如：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@coroutine</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">routine_main</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">yield</span> routine_simple()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">yield</span> sleep(<span class="number">1</span>)</span><br></pre></td></tr></table></figure>
+
+<p>这里的 routine_simple() 和 sleep(1) 分别对应一个协程，同时有一个 Future 对应。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Future</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">        self._done = <span class="literal">False</span></span><br><span class="line">        self._callbacks = []</span><br><span class="line">        self._result = <span class="literal">None</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">_set_done</span><span class="params">(self)</span>:</span></span><br><span class="line">        self._done = <span class="literal">True</span></span><br><span class="line">        <span class="keyword">for</span> cb <span class="keyword">in</span> self._callbacks:</span><br><span class="line">            cb(self)</span><br><span class="line">        self._callbacks = <span class="literal">None</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">done</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">return</span> self._done</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">add_done_callback</span><span class="params">(self, fn)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> self._done:</span><br><span class="line">            fn(self)</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            self._callbacks.append(fn)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">set_result</span><span class="params">(self, result)</span>:</span></span><br><span class="line">        self._result = result</span><br><span class="line">        self._set_done()</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">result</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">return</span> self._result</span><br></pre></td></tr></table></figure>
+
+<h2 id="IOLoop"><a href="#IOLoop" class="headerlink" title="IOLoop"></a>IOLoop</h2><p>这里的 IOLoop 去掉了 tornado 源代码中 IO 相关部分，只保留了基本需要的功能，如果命名为 CoroutineLoop 更贴切。</p>
+<p>这里的 IOLoop 提供基本的回调功能。它是一个线程循环，在循环中完成两件事：</p>
+<ol>
+<li>检测有没有注册的回调并执行</li>
+<li>检测有没有到期的定时器回调并执行</li>
+</ol>
+<p>程序中注册的回调事件，最终都会在此处执行。<br>可以认为，协程程序本身、协程的驱动程序 都会在此处执行。<br>协程本身使用 wrapper 包装，并最后注册到 IOLoop 的事件回调，所以它的从预激到结束的代码全部在 IOLoop 回调中执行。<br>而协程预激后，会把 Runner.run() 函数注册到 IOLoop 的事件回调，以驱动协程向前运行。</p>
+<p>理解这一点对于理解协程的运行原理至关重要。</p>
+<p>这就是单线程异步的基本原理。因为都在一个线程循环中执行，我们可以不用处理多线程需要面对的各种繁琐的事情。</p>
+<h3 id="IOLoop-start"><a href="#IOLoop-start" class="headerlink" title="IOLoop.start"></a>IOLoop.start</h3><p>事件循环，回调事件和定时器事件在循环中调用。</p>
+<h3 id="IOLoop-run-sync"><a href="#IOLoop-run-sync" class="headerlink" title="IOLoop.run_sync"></a>IOLoop.run_sync</h3><p>执行一个协程。</p>
+<p>将 run 注册进全局回调，在 run 中调用 func() 启动协程。<br>注册协程结束回调 stop, 退出 run_sync 的 start 循环，事件循环随之结束。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">IOLoop</span><span class="params">(object)</span>:</span>，</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">        self._callbacks = []</span><br><span class="line">        self._timers = []</span><br><span class="line">        self._running = <span class="literal">False</span></span><br><span class="line"></span><br><span class="line"><span class="meta">    @classmethod</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">instance</span><span class="params">(cls)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> hasattr(cls, <span class="string">"_instance"</span>):</span><br><span class="line">            cls._instance = cls()</span><br><span class="line">        <span class="keyword">return</span> cls._instance</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">add_future</span><span class="params">(self, future, callback)</span>:</span></span><br><span class="line">        future.add_done_callback(</span><br><span class="line">            <span class="keyword">lambda</span> future: self.add_callback(functools.partial(callback, future)))</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">add_timeout</span><span class="params">(self, when, callback)</span>:</span></span><br><span class="line">        bisect.insort(self._timers, (when, callback))</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">call_later</span><span class="params">(self, delay, callback)</span>:</span></span><br><span class="line">        <span class="keyword">return</span> self.add_timeout(time.time() + delay, callback)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">add_callback</span><span class="params">(self, call_back)</span>:</span></span><br><span class="line">        self._callbacks.append(call_back)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">start</span><span class="params">(self)</span>:</span></span><br><span class="line">        self._running = <span class="literal">True</span></span><br><span class="line">        <span class="keyword">while</span> self._running:</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 回调任务</span></span><br><span class="line">            callbacks = self._callbacks</span><br><span class="line">            self._callbacks = []</span><br><span class="line">            <span class="keyword">for</span> call_back <span class="keyword">in</span> callbacks:</span><br><span class="line">                call_back()</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 定时器任务</span></span><br><span class="line">            <span class="keyword">while</span> self._timers <span class="keyword">and</span> self._timers[<span class="number">0</span>][<span class="number">0</span>] &lt; time.time():</span><br><span class="line">                task = self._timers[<span class="number">0</span>][<span class="number">1</span>]</span><br><span class="line">                <span class="keyword">del</span> self._timers[<span class="number">0</span>]</span><br><span class="line">                task()</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">stop</span><span class="params">(self)</span>:</span></span><br><span class="line">        self._running = <span class="literal">False</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">run_sync</span><span class="params">(self, func)</span>:</span></span><br><span class="line">        future_cell = [<span class="literal">None</span>]</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">def</span> <span class="title">run</span><span class="params">()</span>:</span></span><br><span class="line">            <span class="keyword">try</span>:</span><br><span class="line">                future_cell[<span class="number">0</span>] = func()</span><br><span class="line">            <span class="keyword">except</span> Exception:</span><br><span class="line">                <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line">            self.add_future(future_cell[<span class="number">0</span>], <span class="keyword">lambda</span> future: self.stop())</span><br><span class="line"></span><br><span class="line">        self.add_callback(run)</span><br><span class="line"></span><br><span class="line">        self.start()</span><br><span class="line">        <span class="keyword">return</span> future_cell[<span class="number">0</span>].result()</span><br></pre></td></tr></table></figure>
+
+<h2 id="coroutine"><a href="#coroutine" class="headerlink" title="coroutine"></a>coroutine</h2><p>协程装饰器。<br>协程由 coroutine 装饰，分为两类：</p>
+<ol>
+<li>含 yield 的生成器函数</li>
+<li>无 yield 语句的普通函数</li>
+</ol>
+<p>装饰协程，并通过注册回调驱动协程运行。<br>程序中通过 yield coroutine_func() 方式调用协程。<br>此时，wrapper 函数被调用：</p>
+<ol>
+<li>获取协程生成器</li>
+<li>如果是生成器，则<ol>
+<li>调用 next() 预激协程</li>
+<li>实例化 Runner()，驱动协程</li>
+</ol>
+</li>
+<li>如果是普通函数，则<ol>
+<li>调用 set_result() 结束协程</li>
+</ol>
+</li>
+</ol>
+<p>协程返回 Future 对象，供外层的协程处理。外部通过操作该 Future 控制协程的运行。<br>每个 yield 对应一个协程，每个协程拥有一个 Future 对象。</p>
+<p>外部协程获取到内部协程的 Future 对象，如果内部协程尚未结束，将 Runner.run() 方法注册到 内部协程的 Future 的结束回调。<br>这样，在内部协程结束时，会调用注册的 run() 方法，从而驱动外部协程向前执行。</p>
+<p>各个协程通过 Future 形成一个链式回调关系。</p>
+<p>Runner 类在下面单独小节描述。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">coroutine</span><span class="params">(func)</span>:</span></span><br><span class="line">    <span class="keyword">return</span> _make_coroutine_wrapper(func)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 每个协程都有一个 future， 代表当前协程的运行状态</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">_make_coroutine_wrapper</span><span class="params">(func)</span>:</span></span><br><span class="line"><span class="meta">    @functools.wraps(func)</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">wrapper</span><span class="params">(*args, **kwargs)</span>:</span></span><br><span class="line">        future = Future()</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            result = func(*args, **kwargs)</span><br><span class="line">        <span class="keyword">except</span> (Return, StopIteration) <span class="keyword">as</span> e:</span><br><span class="line">            result = _value_from_stopiteration(e)</span><br><span class="line">        <span class="keyword">except</span> Exception:</span><br><span class="line">            <span class="keyword">return</span> future</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            <span class="keyword">if</span> isinstance(result, GeneratorType):</span><br><span class="line">                <span class="keyword">try</span>:</span><br><span class="line">                    yielded = next(result)</span><br><span class="line">                <span class="keyword">except</span> (StopIteration, Return) <span class="keyword">as</span> e:</span><br><span class="line">                    future.set_result(_value_from_stopiteration(e))</span><br><span class="line">                <span class="keyword">except</span> Exception:</span><br><span class="line">                    <span class="keyword">pass</span></span><br><span class="line">                <span class="keyword">else</span>:</span><br><span class="line">                    Runner(result, future, yielded)</span><br><span class="line">                <span class="keyword">try</span>:</span><br><span class="line">                    <span class="keyword">return</span> future</span><br><span class="line">                <span class="keyword">finally</span>:</span><br><span class="line">                    future = <span class="literal">None</span></span><br><span class="line">        future.set_result(result)</span><br><span class="line">        <span class="keyword">return</span> future</span><br><span class="line">    <span class="keyword">return</span> wrapper</span><br></pre></td></tr></table></figure>
+
+<h2 id="协程返回值"><a href="#协程返回值" class="headerlink" title="协程返回值"></a>协程返回值</h2><p>因为没有使用 yield from，协程无法直接返回值，所以使用抛出异常的方式返回。</p>
+<p>python 2 无法在生成器中使用 return 语句。但是生成器中抛出的异常可以在外部 send() 语句中捕获。<br>所以，使用抛出异常的方式，将返回值存储在异常的 value 属性中，抛出。外部使用诸如：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span>:</span><br><span class="line">    yielded = gen.send(value)</span><br><span class="line"><span class="keyword">except</span> Return <span class="keyword">as</span> e:</span><br></pre></td></tr></table></figure>
+
+<p>这样的方式获取协程的返回值。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Return</span><span class="params">(Exception)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, value=None)</span>:</span></span><br><span class="line">        super(Return, self).__init__()</span><br><span class="line">        self.value = value</span><br><span class="line">        self.args = (value,)</span><br></pre></td></tr></table></figure>
+
+<h2 id="Runner"><a href="#Runner" class="headerlink" title="Runner"></a>Runner</h2><p>Runner 是协程的驱动器类。</p>
+<p>self.result_future 保存当前协程的状态。<br>self.future 保存 yield 子协程传递回来的协程状态。<br>从子协程的 future 获取协程运行结果 send 给当前协程，以驱动协程向前执行。</p>
+<p>注意，会判断子协程返回的 future<br>如果 future 已经 set_result，代表子协程运行结束，回到 while Ture 循环，继续往下执行下一个 send；<br>如果 future 未 set_result，代表子协程运行未结束，将 self.run 注册到子协程结束的回调，这样，子协程结束时会调用 self.run，重新驱动协程执行。</p>
+<p>如果本协程 send() 执行过程中，捕获到 StopIteration 或者 Return 异常，说明本协程执行结束，设置 result_future 的协程返回值，此时，注册的回调函数被执行。这里的回调函数为本协程的父协程所注册的 run()。<br>相当于唤醒已经处于 yiled 状态的父协程，通过 IOLoop 回调 run 函数，再执行 send()。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Runner</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, gen, result_future, first_yielded)</span>:</span></span><br><span class="line">        self.gen = gen</span><br><span class="line">        self.result_future = result_future</span><br><span class="line">        self.io_loop = IOLoop.instance()</span><br><span class="line">        self.running = <span class="literal">False</span></span><br><span class="line">        self.future = <span class="literal">None</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> self.handle_yield(first_yielded):</span><br><span class="line">            self.run()</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">run</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            self.running = <span class="literal">True</span></span><br><span class="line">            <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line"></span><br><span class="line">                <span class="keyword">try</span>:</span><br><span class="line">                    <span class="comment"># 每一个 yield 处看做一个协程，对应一个 Future</span></span><br><span class="line">                    <span class="comment"># 将该协程的结果 send 出去</span></span><br><span class="line">                    <span class="comment"># 这样外层形如  ret = yiled coroutine_func() 能够获取到协程的返回数据</span></span><br><span class="line">                    value = self.future.result()</span><br><span class="line">                    yielded = self.gen.send(value)</span><br><span class="line">                <span class="keyword">except</span> (StopIteration, Return) <span class="keyword">as</span> e:</span><br><span class="line">                    <span class="comment"># 协程执行完成，不再注册回调</span></span><br><span class="line">                    self.result_future.set_result(_value_from_stopiteration(e))</span><br><span class="line">                    self.result_future = <span class="literal">None</span></span><br><span class="line">                    <span class="keyword">return</span></span><br><span class="line">                <span class="keyword">except</span> Exception:</span><br><span class="line">                    <span class="keyword">return</span></span><br><span class="line">                <span class="comment"># 协程未执行结束，继续使用 self.run() 进行驱动</span></span><br><span class="line">                <span class="keyword">if</span> <span class="keyword">not</span> self.handle_yield(yielded):</span><br><span class="line">                    <span class="keyword">return</span></span><br><span class="line">        <span class="keyword">finally</span>:</span><br><span class="line">            self.running = <span class="literal">False</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">handle_yield</span><span class="params">(self, yielded)</span>:</span></span><br><span class="line">        self.future = yielded</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> self.future.done():</span><br><span class="line">            <span class="comment"># 给 future 增加执行结束回调函数，这样，外部使用 future.set_result 时会调用该回调</span></span><br><span class="line">            <span class="comment"># 而该回调是把 self.run() 注册到 IOLoop 的事件循环</span></span><br><span class="line">            <span class="comment"># 所以，future.set_result 会把 self.run() 注册到 IOLoop 的事件循环，从而在下一个事件循环中调用</span></span><br><span class="line">            self.io_loop.add_future(</span><br><span class="line">                self.future, <span class="keyword">lambda</span> f: self.run())</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">True</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="sleep"><a href="#sleep" class="headerlink" title="sleep"></a>sleep</h2><p>sleep 是一个延时协程，充分展示了协程的标准实现。</p>
+<ul>
+<li>创建一个 Future，并返回给外部协程；</li>
+<li>外部协程发现是一个未完的状态，将 run() 注册到 Future 的完成回调，同时外部协程被挂起；</li>
+<li>在设置的延时后，IOLoop 会回调 set_result 结束协程；</li>
+<li>IOLoop 调用 run() 函数；</li>
+<li>IOLoop 调用 send()，唤醒挂起的外部协程。</li>
+</ul>
+<p>流程如下图：</p>
+<p><img src="https://github.com/TheBigFish/blog/raw/master/assets/tornado_simple_routine_1.png" alt=""></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">sleep</span><span class="params">(duration)</span>:</span></span><br><span class="line">    f = Future()</span><br><span class="line">    IOLoop.instance().call_later(duration, <span class="keyword">lambda</span>: f.set_result(<span class="literal">None</span>))</span><br><span class="line">    <span class="keyword">return</span> f</span><br></pre></td></tr></table></figure>
+
+<h2 id="运行"><a href="#运行" class="headerlink" title="运行"></a>运行</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@coroutine</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">routine_ur</span><span class="params">(url, wait)</span>:</span></span><br><span class="line">    <span class="keyword">yield</span> sleep(wait)</span><br><span class="line">    print(<span class="string">'routine_ur &#123;&#125; took &#123;&#125;s to get!'</span>.format(url, wait))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@coroutine</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">routine_url_with_return</span><span class="params">(url, wait)</span>:</span></span><br><span class="line">    <span class="keyword">yield</span> sleep(wait)</span><br><span class="line">    print(<span class="string">'routine_url_with_return &#123;&#125; took &#123;&#125;s to get!'</span>.format(url, wait))</span><br><span class="line">    <span class="keyword">raise</span> Return((url, wait))</span><br><span class="line"></span><br><span class="line"><span class="comment"># 非生成器协程，不会为之生成单独的 Runner()</span></span><br><span class="line"><span class="comment"># coroutine 运行结束后，直接返回一个已经执行结束的 future</span></span><br><span class="line"><span class="meta">@coroutine</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">routine_simple</span><span class="params">()</span>:</span></span><br><span class="line">    print(<span class="string">"it is simple routine"</span>)</span><br><span class="line"></span><br><span class="line"><span class="meta">@coroutine</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">routine_simple_return</span><span class="params">()</span>:</span></span><br><span class="line">    print(<span class="string">"it is simple routine with return"</span>)</span><br><span class="line">    <span class="keyword">raise</span> Return(<span class="string">"value from routine_simple_return"</span>)</span><br><span class="line"></span><br><span class="line"><span class="meta">@coroutine</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">routine_main</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">yield</span> routine_simple()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">yield</span> routine_ur(<span class="string">"url0"</span>, <span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">    ret = <span class="keyword">yield</span> routine_simple_return()</span><br><span class="line">    print(ret)</span><br><span class="line"></span><br><span class="line">    ret = <span class="keyword">yield</span> routine_url_with_return(<span class="string">"url1"</span>, <span class="number">1</span>)</span><br><span class="line">    print(ret)</span><br><span class="line"></span><br><span class="line">    ret = <span class="keyword">yield</span> routine_url_with_return(<span class="string">"url2"</span>, <span class="number">2</span>)</span><br><span class="line">    print(ret)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</span><br><span class="line">    IOLoop.instance().run_sync(routine_main)</span><br></pre></td></tr></table></figure>
+
+<p>运行输出为：</p>
+<pre><code>it is simple routine
+routine_ur url0 took 1s to get!
+it is simple routine with return
+value from routine_simple_return
+routine_url_with_return url1 took 1s to get!
+(&apos;url1&apos;, 1)
+routine_url_with_return url2 took 2s to get!
+(&apos;url2&apos;, 2)</code></pre><p>可以观察到协程 sleep 已经生效。</p>
+<h2 id="源码"><a href="#源码" class="headerlink" title="源码"></a>源码</h2><p><a href="https://github.com/TheBigFish/simple-python/blob/master/tornado/simple_coroutine.py" target="_blank" rel="noopener">simple_coroutine.py</a></p>
+<h2 id="copyright"><a href="#copyright" class="headerlink" title="copyright"></a>copyright</h2><p>author：bigfish<br>copyright: <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">许可协议 知识共享署名 - 非商业性使用 4.0 国际许可协议</a></p>
+<hr>
+<p>Sync From: <a href="https://github.com/TheBigFish/blog/issues/12" target="_blank" rel="noopener">https://github.com/TheBigFish/blog/issues/12</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Tornado/" rel="tag"># Tornado</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/01/03/rust--an-zhuang-ji-pei-zhi/" rel="next" title="rust 安装及配置">
+                <i class="fa fa-chevron-left"></i> rust 安装及配置
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/07/17/codeblock--lian-jie--openssl--ku-wen-jian/" rel="prev" title="codeblock 链接 openssl 库文件">
+                codeblock 链接 openssl 库文件 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  
+    <div id="gitalk-container"></div>
+  
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">bigfish</p>
+              <p class="site-description motion-element" itemprop="description">一些简单的想法</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7C%20archive">
+              
+                  <span class="site-state-item-count">17</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#tornado-源码之-coroutine-分析"><span class="nav-number">1.</span> <span class="nav-text">tornado 源码之 coroutine 分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#外部库"><span class="nav-number">1.1.</span> <span class="nav-text">外部库</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Future"><span class="nav-number">1.2.</span> <span class="nav-text">Future</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IOLoop"><span class="nav-number">1.3.</span> <span class="nav-text">IOLoop</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#IOLoop-start"><span class="nav-number">1.3.1.</span> <span class="nav-text">IOLoop.start</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IOLoop-run-sync"><span class="nav-number">1.3.2.</span> <span class="nav-text">IOLoop.run_sync</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#coroutine"><span class="nav-number">1.4.</span> <span class="nav-text">coroutine</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#协程返回值"><span class="nav-number">1.5.</span> <span class="nav-text">协程返回值</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Runner"><span class="nav-number">1.6.</span> <span class="nav-text">Runner</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#sleep"><span class="nav-number">1.7.</span> <span class="nav-text">sleep</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#运行"><span class="nav-number">1.8.</span> <span class="nav-text">运行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#源码"><span class="nav-number">1.9.</span> <span class="nav-text">源码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#copyright"><span class="nav-number">1.10.</span> <span class="nav-text">copyright</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">bigfish</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.3</div>
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      访客数
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      人
+    </span>
+  
+
+  
+    <span class="site-pv">
+      总访问量
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      次
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.3"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+  <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+  <div id="gitalk-container"></div>
+  <script type="text/javascript">
+    var gitalk = new Gitalk({
+      clientID: '539ee569f1e8cf3ea34a',
+      clientSecret: 'd4384d3c96e794fea423f52d48aec0caab7d0eea',
+      repo: 'blog_comment',
+      owner: 'TheBigFish',
+      admin: ['TheBigFish'],
+      id: location.pathname,
+      distractionFreeMode: 'false'
+    })
+    gitalk.render('gitalk-container')
+  </script>
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

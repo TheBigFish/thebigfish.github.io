@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Tornado," />
+
+
+
+
+  
+
+
+  <link rel="alternate" href="/atom.xml" title="理想-咸鱼" type="application/atom+xml" />
+
+
+
+
+
+
+<meta name="description" content="tornado 源码之 StackContext（一） tornado 的异步上下文机制分析  contents tornado 源码之 StackContext（一） contents MyIOLoop 异步回调异常的捕获 使用 wrap 使用 contextlib inspired by copyright    我们实现一个简单的 MyIOLoop 类，模仿 tornado 的 IOLoop">
+<meta property="og:type" content="article">
+<meta property="og:title" content="tornado源码之StackContext（一）">
+<meta property="og:url" content="http://yoursite.com/2018/12/21/-tornado-yuan-ma-zhi-stackcontext%EF%BC%88-yi-%EF%BC%89/index.html">
+<meta property="og:site_name" content="理想-咸鱼">
+<meta property="og:description" content="tornado 源码之 StackContext（一） tornado 的异步上下文机制分析  contents tornado 源码之 StackContext（一） contents MyIOLoop 异步回调异常的捕获 使用 wrap 使用 contextlib inspired by copyright    我们实现一个简单的 MyIOLoop 类，模仿 tornado 的 IOLoop">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2018-12-21T08:50:38.000Z">
+<meta property="article:modified_time" content="2019-01-11T07:29:36.000Z">
+<meta property="article:author" content="bigfish">
+<meta property="article:tag" content="Tornado">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.3',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/12/21/-tornado-yuan-ma-zhi-stackcontext（-yi-）/"/>
+
+
+
+
+
+  <title>tornado源码之StackContext（一） | 理想-咸鱼</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">理想-咸鱼</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">鱼翔浅底</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/12/21/-tornado-yuan-ma-zhi-stackcontext%EF%BC%88-yi-%EF%BC%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="bigfish">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="理想-咸鱼">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">tornado源码之StackContext（一）</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-12-21T16:50:38+08:00">
+                2018-12-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>  阅读数
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Words count in article&#58;</span>
+                
+                <span title="Words count in article">
+                  1.1k
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Reading time &asymp;</span>
+                
+                <span title="Reading time">
+                  5
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="tornado-源码之-StackContext（一）"><a href="#tornado-源码之-StackContext（一）" class="headerlink" title="tornado 源码之 StackContext（一）"></a>tornado 源码之 StackContext（一）</h1><blockquote>
+<p>tornado 的异步上下文机制分析</p>
+</blockquote>
+<h2 id="contents"><a href="#contents" class="headerlink" title="contents"></a>contents</h2><ul>
+<li><a href="#tornado-%E6%BA%90%E7%A0%81%E4%B9%8B-stackcontext%E4%B8%80">tornado 源码之 StackContext（一）</a><ul>
+<li><a href="#contents">contents</a></li>
+<li><a href="#myioloop">MyIOLoop</a></li>
+<li><a href="#%E5%BC%82%E6%AD%A5%E5%9B%9E%E8%B0%83%E5%BC%82%E5%B8%B8%E7%9A%84%E6%8D%95%E8%8E%B7">异步回调异常的捕获</a></li>
+<li><a href="#%E4%BD%BF%E7%94%A8-wrap">使用 wrap</a></li>
+<li><a href="#%E4%BD%BF%E7%94%A8-contextlib">使用 contextlib</a></li>
+<li><a href="#inspired-by">inspired by</a></li>
+<li><a href="#copyright">copyright</a></li>
+</ul>
+</li>
+</ul>
+<p>我们实现一个简单的 MyIOLoop 类，模仿 tornado 的 IOLoop，实现异步回调<br>实现一个简单的 MyStackContext 类，模仿 tornado 的 StackContext，实现上下文</p>
+<h2 id="MyIOLoop"><a href="#MyIOLoop" class="headerlink" title="MyIOLoop"></a>MyIOLoop</h2><p>模拟 tornado IOLoop</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyIOLoop</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">        self._callbacks = []</span><br><span class="line"></span><br><span class="line"><span class="meta">    @classmethod</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">instance</span><span class="params">(cls)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> hasattr(cls, <span class="string">"_instance"</span>):</span><br><span class="line">            cls._instance = cls()</span><br><span class="line">        <span class="keyword">return</span> cls._instance</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">add_callback</span><span class="params">(self, call_back)</span>:</span></span><br><span class="line">        self._callbacks.append(call_back)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">start</span><span class="params">(self)</span>:</span></span><br><span class="line">        callbacks = self._callbacks</span><br><span class="line">        self._callbacks = []</span><br><span class="line">        <span class="keyword">for</span> call_back <span class="keyword">in</span> callbacks:</span><br><span class="line">            call_back()</span><br></pre></td></tr></table></figure>
+
+<h2 id="异步回调异常的捕获"><a href="#异步回调异常的捕获" class="headerlink" title="异步回调异常的捕获"></a>异步回调异常的捕获</h2><p>由输出可以看到，回调函数 call_func 中抛出的异常，在 main 函数中无法被捕获<br>main 函数只能捕获当时运行的 async_task 中抛出的异常, async_task 只是向 MyIOLoop 注册了一个回调，并没有当场调用回调<br>call_func 函数最终在 MyIOLoop.start 中调用，其异常没有被捕获</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">my_io_loop = MyIOLoop.instance()</span><br><span class="line">times = <span class="number">0</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">call_func</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">print</span> <span class="string">'run call_func'</span></span><br><span class="line">    <span class="keyword">raise</span> ValueError(<span class="string">'except in call_func'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">async_task</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">global</span> times</span><br><span class="line">    times += <span class="number">1</span></span><br><span class="line">    <span class="keyword">print</span> <span class="string">'run async task &#123;&#125;'</span>.format(times)</span><br><span class="line">    my_io_loop.add_callback(call_back=call_func)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">main</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        async_task()</span><br><span class="line">    <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">        <span class="keyword">print</span> <span class="string">'main exception &#123;&#125;'</span>.format(e)</span><br><span class="line">        <span class="keyword">print</span> <span class="string">'end'</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</span><br><span class="line">    main()</span><br><span class="line">    my_io_loop.start()</span><br><span class="line"></span><br><span class="line"><span class="comment"># run async task 1</span></span><br><span class="line"><span class="comment"># Traceback (most recent call last):</span></span><br><span class="line"><span class="comment"># run call_func</span></span><br><span class="line"><span class="comment">#   File "E:/learn/python/simple-python/stack_context_example.py", line 56, in &lt;module&gt;</span></span><br><span class="line"><span class="comment">#     my_io_loop.start()</span></span><br><span class="line"><span class="comment">#   File "E:/learn/python/simple-python/stack_context_example.py", line 26, in start</span></span><br><span class="line"><span class="comment">#     call_back()</span></span><br><span class="line"><span class="comment">#   File "E:/learn/python/simple-python/stack_context_example.py", line 36, in call_func</span></span><br><span class="line"><span class="comment">#     raise ValueError('except in call_func')</span></span><br><span class="line"><span class="comment"># ValueError: except in call_func</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="使用-wrap"><a href="#使用-wrap" class="headerlink" title="使用 wrap"></a>使用 wrap</h2><p>可以使用 wrap 的方式，把函数调用和异常捕捉写在一起，回调实际调用的是带异常捕捉的函数 wrapper</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">my_io_loop = MyIOLoop.instance()</span><br><span class="line">times = <span class="number">0</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">call_func</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">print</span> <span class="string">'run call_func'</span></span><br><span class="line">    <span class="keyword">raise</span> ValueError(<span class="string">'except in call_func'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">wrapper</span><span class="params">(func)</span>:</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        func()</span><br><span class="line">    <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">        <span class="keyword">print</span> <span class="string">'wrapper exception &#123;&#125;'</span>.format(e)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">async_task</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">global</span> times</span><br><span class="line">    times += <span class="number">1</span></span><br><span class="line">    <span class="keyword">print</span> <span class="string">'run async task &#123;&#125;'</span>.format(times)</span><br><span class="line">    my_io_loop.add_callback(call_back=functools.partial(wrapper, call_func))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">main</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        async_task()</span><br><span class="line">    <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">        <span class="keyword">print</span> <span class="string">'main exception &#123;&#125;'</span>.format(e)</span><br><span class="line">        <span class="keyword">print</span> <span class="string">'end'</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</span><br><span class="line">    main()</span><br><span class="line">    my_io_loop.start()</span><br><span class="line"></span><br><span class="line"><span class="comment"># run async task 1</span></span><br><span class="line"><span class="comment"># run call_func</span></span><br><span class="line"><span class="comment"># wrapper exception except in call_func</span></span><br></pre></td></tr></table></figure>
+
+<p>由此，可以想到，构造一个上下文环境，使用全局变量保存这个执行环境，等回调函数执行的时候，构造出这个环境</p>
+<h2 id="使用-contextlib"><a href="#使用-contextlib" class="headerlink" title="使用 contextlib"></a>使用 contextlib</h2><p>下面模仿了 tornado 异步上下文实现机制</p>
+<ol>
+<li>MyStackContext 使用 __enter__ __exit__ 支持上下文</li>
+<li>MyStackContext 构造函数参数为一个上下文对象</li>
+<li>with MyStackContext(context) 进行如下动作：<br><strong>在 MyStackContext(context) 构造时，把 context 注册进全局工厂 MyStackContext.context_factory</strong><ol>
+<li>进入 MyStackContext 的__enter</li>
+<li>构造一个 context 对象</li>
+<li>调用 context 对象的 __enter，进入真正 context 上下文</li>
+<li>执行 context 上下文，my_context yield 语句前的部分</li>
+<li>执行上下文包裹的语句，async_task</li>
+<li>async_task 中 add_callback，实际保存的 wrap, wrap 将此时的全局上下文环境 MyStackContext.context_factory 保存，以方便 call_back 调用</li>
+<li>调用 context 对象的 __exit, 退出 context 上下文</li>
+<li>进入 MyStackContext 的__exit</li>
+</ol>
+</li>
+<li>my_io_loop.start() 执行, 调用注册的 _call_back</li>
+<li>实际调用 wrapped 函数<ol>
+<li>获取保存的 context 环境</li>
+<li>with context</li>
+<li>调用真正的 callback</li>
+</ol>
+</li>
+</ol>
+<p>这样，在 main 函数中执行</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">with</span> MyStackContext(my_context):</span><br><span class="line">    async_task()</span><br></pre></td></tr></table></figure>
+
+<p>构造一个执行上下文 my_context，异步函数将在这个上下文中调用<br>效果上相当于在 my_context 这个上下文环境中调用 async_task<br>类似：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">my_context</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">print</span> <span class="string">'---enter my_context---&gt;&gt;'</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        async_task()</span><br><span class="line">    <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">        <span class="keyword">print</span> <span class="string">'handler except: &#123;&#125;'</span>.format(e)</span><br><span class="line">    <span class="keyword">finally</span>:</span><br><span class="line">        <span class="keyword">print</span> <span class="string">'&lt;&lt;---exit my_context ---'</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> contextlib</span><br><span class="line"><span class="keyword">import</span> functools</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyIOLoop</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">        self._callbacks = []</span><br><span class="line"></span><br><span class="line"><span class="meta">    @classmethod</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">instance</span><span class="params">(cls)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> hasattr(cls, <span class="string">"_instance"</span>):</span><br><span class="line">            cls._instance = cls()</span><br><span class="line">        <span class="keyword">return</span> cls._instance</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">add_callback</span><span class="params">(self, call_back)</span>:</span></span><br><span class="line">        self._callbacks.append(wrap(call_back))</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">start</span><span class="params">(self)</span>:</span></span><br><span class="line">        callbacks = self._callbacks</span><br><span class="line">        self._callbacks = []</span><br><span class="line">        <span class="keyword">for</span> call_back <span class="keyword">in</span> callbacks:</span><br><span class="line">            self._call_back(call_back)</span><br><span class="line"></span><br><span class="line"><span class="meta">    @staticmethod</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">_call_back</span><span class="params">(func)</span>:</span></span><br><span class="line">        func()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyStackContext</span><span class="params">(object)</span>:</span></span><br><span class="line">    context_factory = []</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, context)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> context:</span><br><span class="line">            MyStackContext.context_factory.append(context)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__enter__</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            self.context = self.context_factory[<span class="number">0</span>]()</span><br><span class="line">            self.context.__enter__()</span><br><span class="line">        <span class="keyword">except</span> Exception:</span><br><span class="line">            <span class="keyword">raise</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__exit__</span><span class="params">(self, type, value, traceback)</span>:</span></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            <span class="keyword">return</span> self.context.__exit__(type, value, traceback)</span><br><span class="line">        <span class="keyword">finally</span>:</span><br><span class="line">            <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">wrap</span><span class="params">(fn)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">wrapped</span><span class="params">(callback, contexts, *args, **kwargs)</span>:</span></span><br><span class="line">        context = contexts[<span class="number">0</span>]()</span><br><span class="line">        <span class="keyword">with</span> context:</span><br><span class="line">            callback(*args, **kwargs)</span><br><span class="line"></span><br><span class="line">    contexts = MyStackContext.context_factory</span><br><span class="line">    result = functools.partial(wrapped, fn, contexts)</span><br><span class="line">    <span class="keyword">return</span> result</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">my_io_loop = MyIOLoop.instance()</span><br><span class="line"></span><br><span class="line">times = <span class="number">0</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">call_func</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">print</span> <span class="string">'run call_func'</span></span><br><span class="line">    <span class="keyword">raise</span> ValueError(<span class="string">'except in call_func'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">async_task</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">global</span> times</span><br><span class="line">    times += <span class="number">1</span></span><br><span class="line">    <span class="keyword">print</span> <span class="string">'run async task &#123;&#125;'</span>.format(times)</span><br><span class="line">    my_io_loop.add_callback(call_back=call_func)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@contextlib.contextmanager</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">my_context</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">print</span> <span class="string">'---enter my_context---&gt;&gt;'</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        <span class="keyword">yield</span></span><br><span class="line">    <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">        <span class="keyword">print</span> <span class="string">'handler except: &#123;&#125;'</span>.format(e)</span><br><span class="line">    <span class="keyword">finally</span>:</span><br><span class="line">        <span class="keyword">print</span> <span class="string">'&lt;&lt;---exit my_context ---'</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">main</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">with</span> MyStackContext(my_context):</span><br><span class="line">        async_task()</span><br><span class="line">    <span class="keyword">print</span> <span class="string">'end main'</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</span><br><span class="line">    main()</span><br><span class="line">    my_io_loop.start()</span><br><span class="line"></span><br><span class="line"><span class="comment"># ---enter my_context---&gt;&gt;</span></span><br><span class="line"><span class="comment"># run async task 1</span></span><br><span class="line"><span class="comment"># &lt;&lt;---exit my_context ---</span></span><br><span class="line"><span class="comment"># end main</span></span><br><span class="line"><span class="comment"># ---enter my_context---&gt;&gt;</span></span><br><span class="line"><span class="comment"># run call_func</span></span><br><span class="line"><span class="comment"># handler except: except in call_func</span></span><br><span class="line"><span class="comment"># &lt;&lt;---exit my_context ---</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="inspired-by"><a href="#inspired-by" class="headerlink" title="inspired by"></a>inspired by</h2><p><a href="https://www.jianshu.com/p/3e58f977b908" target="_blank" rel="noopener">Tornado 源码分析（二）异步上下文管理（StackContext）</a></p>
+<h2 id="copyright"><a href="#copyright" class="headerlink" title="copyright"></a>copyright</h2><p>author：bigfish<br>copyright: <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">许可协议 知识共享署名 - 非商业性使用 4.0 国际许可协议</a></p>
+<hr>
+<p>Sync From: <a href="https://github.com/TheBigFish/blog/issues/9" target="_blank" rel="noopener">https://github.com/TheBigFish/blog/issues/9</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Tornado/" rel="tag"># Tornado</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/12/20/tornado-yuan-ma-zhi-iostream/" rel="next" title="tornado源码之iostream">
+                <i class="fa fa-chevron-left"></i> tornado源码之iostream
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/12/21/tornado-yuan-ma-zhi-stackcontext%EF%BC%88-er-%EF%BC%89/" rel="prev" title="tornado源码之StackContext（二）">
+                tornado源码之StackContext（二） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  
+    <div id="gitalk-container"></div>
+  
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">bigfish</p>
+              <p class="site-description motion-element" itemprop="description">一些简单的想法</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7C%20archive">
+              
+                  <span class="site-state-item-count">17</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#tornado-源码之-StackContext（一）"><span class="nav-number">1.</span> <span class="nav-text">tornado 源码之 StackContext（一）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#contents"><span class="nav-number">1.1.</span> <span class="nav-text">contents</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MyIOLoop"><span class="nav-number">1.2.</span> <span class="nav-text">MyIOLoop</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#异步回调异常的捕获"><span class="nav-number">1.3.</span> <span class="nav-text">异步回调异常的捕获</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用-wrap"><span class="nav-number">1.4.</span> <span class="nav-text">使用 wrap</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用-contextlib"><span class="nav-number">1.5.</span> <span class="nav-text">使用 contextlib</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#inspired-by"><span class="nav-number">1.6.</span> <span class="nav-text">inspired by</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#copyright"><span class="nav-number">1.7.</span> <span class="nav-text">copyright</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">bigfish</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.3</div>
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      访客数
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      人
+    </span>
+  
+
+  
+    <span class="site-pv">
+      总访问量
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      次
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.3"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+  <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+  <div id="gitalk-container"></div>
+  <script type="text/javascript">
+    var gitalk = new Gitalk({
+      clientID: '539ee569f1e8cf3ea34a',
+      clientSecret: 'd4384d3c96e794fea423f52d48aec0caab7d0eea',
+      repo: 'blog_comment',
+      owner: 'TheBigFish',
+      admin: ['TheBigFish'],
+      id: location.pathname,
+      distractionFreeMode: 'false'
+    })
+    gitalk.render('gitalk-container')
+  </script>
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

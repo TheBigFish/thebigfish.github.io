@@ -83,15 +83,15 @@
 
 
 
-<meta name="description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick">
+<meta name="description" content="frp 配置 http、websocket、ssh 转发参考 frp#75 http 不使用域名转发frps.ini 12[common]bind_port &#x3D; 7000  frpc.ini 123456789[common]server_addr &#x3D; aaa.bbb.ccc.dddserver_port &#x3D; 7000[tcp_port]type &#x3D; tcplocal_ip &#x3D; 127.0.0.1">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hello World">
-<meta property="og:url" content="http://yoursite.com/2020/01/14/hello-world/index.html">
+<meta property="og:title" content="frp 配置 http、websocket、ssh 转发">
+<meta property="og:url" content="http://yoursite.com/2018/11/07/frp--pei-zhi--http%E3%80%81websocket%E3%80%81ssh--zhuan-fa/index.html">
 <meta property="og:site_name" content="理想-咸鱼">
-<meta property="og:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick">
+<meta property="og:description" content="frp 配置 http、websocket、ssh 转发参考 frp#75 http 不使用域名转发frps.ini 12[common]bind_port &#x3D; 7000  frpc.ini 123456789[common]server_addr &#x3D; aaa.bbb.ccc.dddserver_port &#x3D; 7000[tcp_port]type &#x3D; tcplocal_ip &#x3D; 127.0.0.1">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2020-01-14T06:44:18.237Z">
-<meta property="article:modified_time" content="2020-01-14T06:44:18.237Z">
+<meta property="article:published_time" content="2018-11-07T06:37:56.000Z">
+<meta property="article:modified_time" content="2018-11-07T06:37:56.000Z">
 <meta property="article:author" content="bigfish">
 <meta property="article:tag" content="python c c++ go lua 足球">
 <meta name="twitter:card" content="summary">
@@ -124,13 +124,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2020/01/14/hello-world/"/>
+  <link rel="canonical" href="http://yoursite.com/2018/11/07/frp--pei-zhi--http、websocket、ssh--zhuan-fa/"/>
 
 
 
 
 
-  <title>Hello World | 理想-咸鱼</title>
+  <title>frp 配置 http、websocket、ssh 转发 | 理想-咸鱼</title>
   
 
 
@@ -257,7 +257,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/01/14/hello-world/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/11/07/frp--pei-zhi--http%E3%80%81websocket%E3%80%81ssh--zhuan-fa/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="bigfish">
@@ -274,7 +274,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">Hello World</h1>
+          <h1 class="post-title" itemprop="name headline">frp 配置 http、websocket、ssh 转发</h1>
         
 
         <div class="post-meta">
@@ -286,8 +286,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-01-14T14:44:18+08:00">
-                2020-01-14
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-07T14:37:56+08:00">
+                2018-11-07
               </time>
             
 
@@ -323,7 +323,7 @@
                   <span class="post-meta-item-text">Words count in article&#58;</span>
                 
                 <span title="Words count in article">
-                  73
+                  181
                 </span>
               
 
@@ -360,19 +360,23 @@
       
 
       
-        <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
+        <h1 id="frp-配置-http、websocket、ssh-转发"><a href="#frp-配置-http、websocket、ssh-转发" class="headerlink" title="frp 配置 http、websocket、ssh 转发"></a>frp 配置 http、websocket、ssh 转发</h1><p>参考 <a href="https://github.com/fatedier/frp/issues/75" target="_blank" rel="noopener">frp#75</a></p>
+<h2 id="http-不使用域名转发"><a href="#http-不使用域名转发" class="headerlink" title="http 不使用域名转发"></a>http 不使用域名转发</h2><p><code>frps.ini</code></p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[common]</span></span><br><span class="line"><span class="attr">bind_port</span> = <span class="number">7000</span></span><br></pre></td></tr></table></figure>
 
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+<p><code>frpc.ini</code></p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[common]</span></span><br><span class="line"><span class="attr">server_addr</span> = aaa.bbb.ccc.ddd</span><br><span class="line"><span class="attr">server_port</span> = <span class="number">7000</span></span><br><span class="line"></span><br><span class="line"><span class="section">[tcp_port]</span></span><br><span class="line"><span class="attr">type</span> = tcp</span><br><span class="line"><span class="attr">local_ip</span> = <span class="number">127.0</span>.<span class="number">0.1</span></span><br><span class="line"><span class="attr">local_port</span> = <span class="number">2333</span></span><br><span class="line"><span class="attr">remote_port</span> = <span class="number">3333</span></span><br></pre></td></tr></table></figure>
 
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+<p>在外网通过 <a href="http://aaa.bbb.ccc.ddd:3333" target="_blank" rel="noopener">http://aaa.bbb.ccc.ddd:3333</a> 访问到内网机器里的 <a href="http://127.0.0.1:2333" target="_blank" rel="noopener">http://127.0.0.1:2333</a> 了</p>
+<h2 id="ssh-转发"><a href="#ssh-转发" class="headerlink" title="ssh 转发"></a>ssh 转发</h2><p><code>frpc.ini</code></p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[common]</span></span><br><span class="line"><span class="attr">server_addr</span> = aaa.bbb.ccc.ddd</span><br><span class="line"><span class="attr">server_port</span> = <span class="number">7000</span></span><br><span class="line"></span><br><span class="line"><span class="section">[ssh]</span></span><br><span class="line"><span class="attr">type</span> = tcp</span><br><span class="line"><span class="attr">local_ip</span> = <span class="number">192.168</span>.<span class="number">0.1</span></span><br><span class="line"><span class="attr">local_port</span> = <span class="number">22</span></span><br><span class="line"><span class="attr">remote_port</span> = <span class="number">7022</span></span><br><span class="line"></span><br><span class="line"><span class="section">[tcp_port]</span></span><br><span class="line"><span class="attr">type</span> = tcp</span><br><span class="line"><span class="attr">local_ip</span> = <span class="number">192.168</span>.<span class="number">0.1</span></span><br><span class="line"><span class="attr">local_port</span> = <span class="number">8888</span></span><br><span class="line"><span class="attr">remote_port</span> = <span class="number">8888</span></span><br></pre></td></tr></table></figure>
 
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html" target="_blank" rel="noopener">Deployment</a></p>
+<p>在外网 <code>ssh</code> 通过 <code>ssh -oPort=7022 user@aaa.bbb.ccc.ddd</code> 访问内网机器</p>
+<p>在外网 <code>http</code> 通过 <a href="http://aaa.bbb.ccc.ddd:8888" target="_blank" rel="noopener">http://aaa.bbb.ccc.ddd:8888</a> 访问到内网机器里的 <a href="http://127.0.0.1:8888" target="_blank" rel="noopener">http://127.0.0.1:8888</a> 了</p>
+<p>通过 <code>ws://aaa.bbb.ccc.ddd:8888</code> 访问 websocket</p>
+<h2 id="运行服务"><a href="#运行服务" class="headerlink" title="运行服务"></a>运行服务</h2><p><code>nohup ./frps -c ./frps.ini &amp;</code></p>
+<hr>
+<p>Sync From: <a href="https://github.com/TheBigFish/blog/issues/3" target="_blank" rel="noopener">https://github.com/TheBigFish/blog/issues/3</a></p>
 
       
     </div>
@@ -397,8 +401,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2020/01/08/uefi-security-boot--shi-xian-xi-jie/" rel="next" title="uefi security boot 实现细节">
-                <i class="fa fa-chevron-left"></i> uefi security boot 实现细节
+              <a href="/2018/11/01/python-json--xu-lie-hua-ji-fan-xu-lie-hua/" rel="next" title="python json 序列化及反序列化">
+                <i class="fa fa-chevron-left"></i> python json 序列化及反序列化
               </a>
             
           </div>
@@ -407,8 +411,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2020/01/15/hello-hexo/" rel="prev" title="hello,hexo">
-                hello,hexo <i class="fa fa-chevron-right"></i>
+              <a href="/2018/11/13/thread-local-in-python/" rel="prev" title="thread local in python">
+                thread local in python <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -541,7 +545,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Quick-Start"><span class="nav-number">1.</span> <span class="nav-text">Quick Start</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Create-a-new-post"><span class="nav-number">1.1.</span> <span class="nav-text">Create a new post</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Run-server"><span class="nav-number">1.2.</span> <span class="nav-text">Run server</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Generate-static-files"><span class="nav-number">1.3.</span> <span class="nav-text">Generate static files</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Deploy-to-remote-sites"><span class="nav-number">1.4.</span> <span class="nav-text">Deploy to remote sites</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#frp-配置-http、websocket、ssh-转发"><span class="nav-number">1.</span> <span class="nav-text">frp 配置 http、websocket、ssh 转发</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#http-不使用域名转发"><span class="nav-number">1.1.</span> <span class="nav-text">http 不使用域名转发</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ssh-转发"><span class="nav-number">1.2.</span> <span class="nav-text">ssh 转发</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#运行服务"><span class="nav-number">1.3.</span> <span class="nav-text">运行服务</span></a></li></ol></li></ol></div>
             
 
           </div>
